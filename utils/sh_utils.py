@@ -23,8 +23,8 @@
 
 import torch
 
-C0 = 0.28209479177387814
-C1 = 0.4886025119029199
+C0 = 0.28209479177387814                #sqrt(1/4π)
+C1 = 0.4886025119029199                 #sqrt(3/4π)sin(θ)sin(𝛗)【x:sh3】 sqrt(3/4π)cos(θ)【y:sh2】 sqrt(3/4π))sin(θ)cos(𝛗)【z:sh1】
 C2 = [
     1.0925484305920792,
     -1.0925484305920792,
@@ -56,24 +56,24 @@ C4 = [
 
 def eval_sh(deg, sh, dirs):
     """
-    Evaluate spherical harmonics at unit directions
+    Evaluate spherical harmonics at unit directions 计算单位球谐函数
     using hardcoded SH polynomials.
     Works with torch/np/jnp.
     ... Can be 0 or more batch dimensions.
     Args:
-        deg: int SH deg. Currently, 0-3 supported
+        deg: int SH deg. Currently, 0-3 supported 规定了阶数最大为4阶
         sh: jnp.ndarray SH coeffs [..., C, (deg + 1) ** 2]
         dirs: jnp.ndarray unit directions [..., 3]
     Returns:
         [..., C]
     """
     assert deg <= 4 and deg >= 0
-    coeff = (deg + 1) ** 2
-    assert sh.shape[-1] >= coeff
+    coeff = (deg + 1) ** 2                    #系数，阶数+1的平方值，如3阶=16个系数
+    assert sh.shape[-1] >= coeff              #检查系数数量是否满足要求
 
-    result = C0 * sh[..., 0]
+    result = C0 * sh[..., 0]                  #0阶需要乘第0项球谐函数系数,用系数表示基函数的方向
     if deg > 0:
-        x, y, z = dirs[..., 0:1], dirs[..., 1:2], dirs[..., 2:3]
+        x, y, z = dirs[..., 0:1], dirs[..., 1:2], dirs[..., 2:3]    #分别取两轴之间角度
         result = (result -
                 C1 * y * sh[..., 1] +
                 C1 * z * sh[..., 2] -
