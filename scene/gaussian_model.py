@@ -52,7 +52,7 @@ class GaussianModel:
         self.optimizer_type = optimizer_type                            #优化类型
         self.max_sh_degree = sh_degree                                  #最高阶数
         self._xyz = torch.empty(0)                                      #椭球位置0
-        self._features_dc = torch.empty(0)                              #sh直流分量0
+        self._features_dc = torch.empty(0)                              #sh直流分量DC component，代表平均值0
         self._features_rest = torch.empty(0)                            #sh高阶分量0
         self._scaling = torch.empty(0)                                  #缩放因子0
         self._rotation = torch.empty(0)                                 #旋转因子0
@@ -149,17 +149,17 @@ class GaussianModel:
     def create_from_pcd(self, pcd : BasicPointCloud, cam_infos : int, spatial_lr_scale : float):                        #点云数据pcd = point cloud data
         self.spatial_lr_scale = spatial_lr_scale                                                                        #学习率变化因子
         fused_point_cloud = torch.tensor(np.asarray(pcd.points)).float().cuda()                                         #保存asarray数组类型的点云数据
-        fused_color = RGB2SH(torch.tensor(np.asarray(pcd.colors)).float().cuda())                                       #保存asarray数组类型的颜色数据，通过RGB2SH的方法
-        features = torch.zeros((fused_color.shape[0], 3, (self.max_sh_degree + 1) ** 2)).float().cuda()
-        features[:, :3, 0 ] = fused_color
-        features[:, 3:, 1:] = 0.0
+        fused_color = RGB2SH(torch.tensor(np.asarray(pcd.colors)).float().cuda())                                       #保存asarray数组类型的颜色数据，通过RGB2SH的方法（只存0阶直流分量）
+        features = torch.zeros((fused_color.shape[0], 3, (self.max_sh_degree + 1) ** 2)).float().cuda()                 #将 总量N，3个通道，系数总数 保存进features
+        features[:, :3, 0 ] = fused_color                                                                               #0阶传入直流分量
+        features[:, 3:, 1:] = 0.0                                                                                       #高阶定义为0
 
-        print("Number of points at initialisation : ", fused_point_cloud.shape[0])
+        print("Number of points at initialisation : ", fused_point_cloud.shape[0])                                      #打印点数量
 
-        dist2 = torch.clamp_min(distCUDA2(torch.from_numpy(np.asarray(pcd.points)).float().cuda()), 0.0000001)
+        dist2 = torch.clamp_min(distCUDA2(torch.from_numpy(np.asarray(pcd.points)).float().cuda()), 0.0000001)          #调用Simpleknn算法，对距离取平均值，然后构建高斯球，并设置最小距离为0.0000001（永不重叠）
         scales = torch.log(torch.sqrt(dist2))[...,None].repeat(1, 3)
-        rots = torch.zeros((fused_point_cloud.shape[0], 4), device="cuda")
-        rots[:, 0] = 1
+        rots = torch.zeros((fused_point_cloud.shape[0], 4), device="cuda")                                              #创建旋转变量，N * 4
+        rots[:, 0] = 1                                                                                                  #并将第0维设为1。四元数q=[w,x,y,z]中，参数w=cos(θ/2),反解角度θ=2arccos(w),则 w=1 对应 θ=0。单位四元数无旋转。
 
         opacities = self.inverse_opacity_activation(0.1 * torch.ones((fused_point_cloud.shape[0], 1), dtype=torch.float, device="cuda"))
 
