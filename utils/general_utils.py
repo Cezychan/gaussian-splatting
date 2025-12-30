@@ -80,12 +80,12 @@ def build_rotation(r):
 
     q = r / norm[:, None]                                                               #单位四元数的归一化
 
-    R = torch.zeros((q.size(0), 3, 3), device='cuda')                                   #定义旋转R矩阵为 nx3x3 的张量，n层3x3 的张量
-
-    r = q[:, 0]                                                                         #提取四元数q的第n行第1列
-    x = q[:, 1]                                                                         #提取四元数q的第n行第2列
-    y = q[:, 2]                                                                         #提取四元数q的第n行第3列
-    z = q[:, 3]                                                                         #提取四元数q的第n行第4列
+    R = torch.zeros((q.size(0), 3, 3), device='cuda')                                   #定义旋转R矩阵为 Nx3x3 的张量，总数N层 3x3
+    
+    r = q[:, 0]                                                                         #提取四元数q的第N行第1列
+    x = q[:, 1]                                                                         #提取四元数q的第N行第2列
+    y = q[:, 2]                                                                         #提取四元数q的第N行第3列
+    z = q[:, 3]                                                                         #提取四元数q的第N行第4列
 
     R[:, 0, 0] = 1 - 2 * (y*y + z*z)                                                    #开始构建旋转矩阵
     R[:, 0, 1] = 2 * (x*y - r*z)
