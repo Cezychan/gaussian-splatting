@@ -143,13 +143,13 @@ class GaussianModel:
         return self.covariance_activation(self.get_scaling, scaling_modifier, self._rotation)
 
     def oneupSHdegree(self):
-        if self.active_sh_degree < self.max_sh_degree:
-            self.active_sh_degree += 1
+        if self.active_sh_degree < self.max_sh_degree:            #规定sh函数的阶数，一旦sh阶数小于最大阶数
+            self.active_sh_degree += 1                            #则增加
 
-    def create_from_pcd(self, pcd : BasicPointCloud, cam_infos : int, spatial_lr_scale : float):
-        self.spatial_lr_scale = spatial_lr_scale
-        fused_point_cloud = torch.tensor(np.asarray(pcd.points)).float().cuda()
-        fused_color = RGB2SH(torch.tensor(np.asarray(pcd.colors)).float().cuda())
+    def create_from_pcd(self, pcd : BasicPointCloud, cam_infos : int, spatial_lr_scale : float):                        #点云数据pcd = point cloud data
+        self.spatial_lr_scale = spatial_lr_scale                                                                        #学习率变化因子
+        fused_point_cloud = torch.tensor(np.asarray(pcd.points)).float().cuda()                                         #保存asarray数组类型的点云数据
+        fused_color = RGB2SH(torch.tensor(np.asarray(pcd.colors)).float().cuda())                                       #保存asarray数组类型的颜色数据，通过RGB2SH的方法
         features = torch.zeros((fused_color.shape[0], 3, (self.max_sh_degree + 1) ** 2)).float().cuda()
         features[:, :3, 0 ] = fused_color
         features[:, 3:, 1:] = 0.0
