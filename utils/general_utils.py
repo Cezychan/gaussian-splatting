@@ -99,14 +99,14 @@ def build_rotation(r):
     return R
 
 def build_scaling_rotation(s, r):                                                    #传入s缩放因子与r旋转因子
-    L = torch.zeros((s.shape[0], 3, 3), dtype=torch.float, device="cuda")            #定义L矩阵为 nx3x3 的张量，n层3x3 的张量
-    R = build_rotation(r)                                                            #定义R矩阵为 build_rotation
+    L = torch.zeros((s.shape[0], 3, 3), dtype=torch.float, device="cuda")            #定义L缩放矩阵为 nx3x3 的张量，n为层数，3x3为平面
+    R = build_rotation(r)                                                            #定义R旋转矩阵为 build_rotation
 
-    L[:,0,0] = s[:,0]
-    L[:,1,1] = s[:,1]
-    L[:,2,2] = s[:,2]
+    L[:,0,0] = s[:,0]                                                                #将缩放因子传入L矩阵的1行1列
+    L[:,1,1] = s[:,1]                                                                #将缩放因子传入L矩阵的2行2列
+    L[:,2,2] = s[:,2]                                                                #将缩放因子传入L矩阵的3行3列
 
-    L = R @ L
+    L = R @ L                                                                        #新矩阵L = 缩放矩阵L x 旋转矩阵R
     return L
 
 def safe_state(silent):
