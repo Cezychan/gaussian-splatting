@@ -76,18 +76,18 @@ def strip_symmetric(sym):
     return strip_lowerdiag(sym)
 
 def build_rotation(r):
-    norm = torch.sqrt(r[:,0]*r[:,0] + r[:,1]*r[:,1] + r[:,2]*r[:,2] + r[:,3]*r[:,3])
+    norm = torch.sqrt(r[:,0]*r[:,0] + r[:,1]*r[:,1] + r[:,2]*r[:,2] + r[:,3]*r[:,3])    #求模值，平方和，再开方
 
-    q = r / norm[:, None]
+    q = r / norm[:, None]                                                               #单位四元数的归一化
 
-    R = torch.zeros((q.size(0), 3, 3), device='cuda')
+    R = torch.zeros((q.size(0), 3, 3), device='cuda')                                   #定义旋转R矩阵为 nx3x3 的张量，n层3x3 的张量
 
-    r = q[:, 0]
-    x = q[:, 1]
-    y = q[:, 2]
-    z = q[:, 3]
+    r = q[:, 0]                                                                         #提取四元数q的第n行第1列
+    x = q[:, 1]                                                                         #提取四元数q的第n行第2列
+    y = q[:, 2]                                                                         #提取四元数q的第n行第3列
+    z = q[:, 3]                                                                         #提取四元数q的第n行第4列
 
-    R[:, 0, 0] = 1 - 2 * (y*y + z*z)
+    R[:, 0, 0] = 1 - 2 * (y*y + z*z)                                                    #开始构建旋转矩阵
     R[:, 0, 1] = 2 * (x*y - r*z)
     R[:, 0, 2] = 2 * (x*z + r*y)
     R[:, 1, 0] = 2 * (x*y + r*z)
@@ -98,9 +98,9 @@ def build_rotation(r):
     R[:, 2, 2] = 1 - 2 * (x*x + y*y)
     return R
 
-def build_scaling_rotation(s, r):
-    L = torch.zeros((s.shape[0], 3, 3), dtype=torch.float, device="cuda")
-    R = build_rotation(r)
+def build_scaling_rotation(s, r):                                                    #传入s缩放因子与r旋转因子
+    L = torch.zeros((s.shape[0], 3, 3), dtype=torch.float, device="cuda")            #定义L矩阵为 nx3x3 的张量，n层3x3 的张量
+    R = build_rotation(r)                                                            #定义R矩阵为 build_rotation
 
     L[:,0,0] = s[:,0]
     L[:,1,1] = s[:,1]
