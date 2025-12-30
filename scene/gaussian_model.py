@@ -29,40 +29,40 @@ except:
 
 class GaussianModel:
 
-    def setup_functions(self):
-        def build_covariance_from_scaling_rotation(scaling, scaling_modifier, rotation):        #从缩放旋转因子构建协方差矩阵
-            L = build_scaling_rotation(scaling_modifier * scaling, rotation)                    #定义缩放旋转因子L
-            actual_covariance = L @ L.transpose(1, 2)
-            symm = strip_symmetric(actual_covariance)
+    def setup_functions(self):                                                                   #初始函数设置
+        def build_covariance_from_scaling_rotation(scaling, scaling_modifier, rotation):         #从缩放旋转因子构建协方差矩阵
+            L = build_scaling_rotation(scaling_modifier * scaling, rotation)                     #定义缩放旋转因子L
+            actual_covariance = L @ L.transpose(1, 2)                                            #L*L转置，但跳过第0维，只转置1与2维，因为第0维是分布总数量。
+            symm = strip_symmetric(actual_covariance)                                            #删除对称部分，节省内存
             return symm
         
-        self.scaling_activation = torch.exp
-        self.scaling_inverse_activation = torch.log
+        self.scaling_activation = torch.exp                                                      #定义缩放因子激活函数 指数函数
+        self.scaling_inverse_activation = torch.log                                              #定义缩放因子激活反函数 对数函数
 
-        self.covariance_activation = build_covariance_from_scaling_rotation
+        self.covariance_activation = build_covariance_from_scaling_rotation                      #定义协方差矩阵的激活 为build_covariance_from_scaling_rotation
 
-        self.opacity_activation = torch.sigmoid
-        self.inverse_opacity_activation = inverse_sigmoid
+        self.opacity_activation = torch.sigmoid                                                  #定义透明度因子激活函数 Sigmoid函数 可以映射到(0,1)之间
+        self.inverse_opacity_activation = inverse_sigmoid                                        #定义透明度因子激活反函数 反Sigmoid函数
 
-        self.rotation_activation = torch.nn.functional.normalize
+        self.rotation_activation = torch.nn.functional.normalize                                 #定义旋转操作函数 归一化函数
 
 
-    def __init__(self, sh_degree, optimizer_type="default"):
-        self.active_sh_degree = 0
-        self.optimizer_type = optimizer_type
-        self.max_sh_degree = sh_degree  
-        self._xyz = torch.empty(0)
-        self._features_dc = torch.empty(0)
-        self._features_rest = torch.empty(0)
-        self._scaling = torch.empty(0)
-        self._rotation = torch.empty(0)
-        self._opacity = torch.empty(0)
-        self.max_radii2D = torch.empty(0)
-        self.xyz_gradient_accum = torch.empty(0)
-        self.denom = torch.empty(0)
-        self.optimizer = None
-        self.percent_dense = 0
-        self.spatial_lr_scale = 0
+    def __init__(self, sh_degree, optimizer_type="default"):            #初始变量设置，为0或空
+        self.active_sh_degree = 0                                       #sh阶数
+        self.optimizer_type = optimizer_type                            #优化类型
+        self.max_sh_degree = sh_degree                                  #最高阶数
+        self._xyz = torch.empty(0)                                      #椭球位置0
+        self._features_dc = torch.empty(0)                              #sh直流分量0
+        self._features_rest = torch.empty(0)                            #sh高阶分量0
+        self._scaling = torch.empty(0)                                  #缩放因子0
+        self._rotation = torch.empty(0)                                 #旋转因子0
+        self._opacity = torch.empty(0)                                  #不透明度0
+        self.max_radii2D = torch.empty(0)                               #2维高斯最大半径r
+        self.xyz_gradient_accum = torch.empty(0)                        #点云位置梯度累计值
+        self.denom = torch.empty(0)                                     #统计分母数量
+        self.optimizer = None                                           #优化器训练学习率
+        self.percent_dense = 0                                          #百分比密度，控制
+        self.spatial_lr_scale = 0                                       #学习率因子
         self.setup_functions()
 
     def capture(self):
@@ -100,8 +100,8 @@ class GaussianModel:
         self.optimizer.load_state_dict(opt_dict)
 
     @property
-    def get_scaling(self):
-        return self.scaling_activation(self._scaling)
+    def get_scaling(self):                                    #函数返回的是激活函数，如果要提取的话要使用反函数来提取
+        return self.scaling_activation(self._scaling)         #如假设真实尺度为0.02，如果要提取不能用0.02，要用log(0.02)
     
     @property
     def get_rotation(self):
