@@ -11,7 +11,7 @@
 
 import torch
 import numpy as np
-from utils.general_utils import inverse_sigmoid, get_expon_lr_func, build_rotation   #sfdsdf
+from utils.general_utils import inverse_sigmoid, get_expon_lr_func, build_rotation  
 from torch import nn
 import os
 import json
@@ -30,8 +30,8 @@ except:
 class GaussianModel:
 
     def setup_functions(self):
-        def build_covariance_from_scaling_rotation(scaling, scaling_modifier, rotation):
-            L = build_scaling_rotation(scaling_modifier * scaling, rotation)
+        def build_covariance_from_scaling_rotation(scaling, scaling_modifier, rotation):        #从缩放旋转因子构建协方差矩阵
+            L = build_scaling_rotation(scaling_modifier * scaling, rotation)                    #定义缩放旋转因子L
             actual_covariance = L @ L.transpose(1, 2)
             symm = strip_symmetric(actual_covariance)
             return symm
